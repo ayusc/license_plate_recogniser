@@ -42,4 +42,4 @@ try:
  else:
     print("\nSorry! I couldn't recognise a license plate in the provided image\n")
 except Exception as e:
-    print(f"Sorry an error occurred !\nException Caught: {e}\n")
+    print(f"\nSorry an error occurred !\nException Caught: {e}\n")
