@@ -40,6 +40,6 @@ try:
  if text:
     print("\n"+"Found licence plate Number: "+text+"\n")
  else:
-    print("\nSorry! I couldn't recognise a license plate in the provided image\n")
-except Exception as e:
-    print(f"\nSorry an error occurred !\nException Caught: {e}\n")
+    print("\nSorry! I couldn't recognise a license plate in the provided image.\n")
+except cv2.error:
+    print("\nSorry! I couldn't recognise a license plate in the provided image.\n")
