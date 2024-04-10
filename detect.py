@@ -7,39 +7,71 @@ import pandas as pd
 import time
 import os
 
+# Set Tesseract path
 tesseract_path = os.popen('which tesseract').read().strip()
 pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
-image = cv2.imread('image.jpg')
+# Define function to process each image
+def process_image(image_path):
+    try:
+        image = cv2.imread(image_path)
 
-try:
- image = imutils.resize(image, width=500)
- gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
- gray = cv2.bilateralFilter(gray, 11, 17, 17)
- edged = cv2.Canny(gray, 170, 200)
- (cnts, _) = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
- cnts=sorted(cnts, key = cv2.contourArea, reverse = True)[:30]
+        # Resize image
+        image = imutils.resize(image, width=500)
+        
+        # Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        # Apply bilateral filter
+        gray = cv2.bilateralFilter(gray, 11, 17, 17)
+        
+        # Apply Canny edge detection
+        edged = cv2.Canny(gray, 170, 200)
+        
+        # Find contours
+        (cnts, _) = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Sort contours by area
+        cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:30]
 
- npcount = None 
- count = 0
- for c in cnts:
-    peri = cv2.arcLength(c, True)
-    approx = cv2.approxPolyDP(c, 0.02 * peri, True)
-    if len(approx) == 4:  
-        npcount = approx 
-        break
+        npcount = None 
+        for c in cnts:
+            peri = cv2.arcLength(c, True)
+            approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+            if len(approx) == 4:  
+                npcount = approx 
+                break
 
- mask = np.zeros(gray.shape,np.uint8)
- nimage = cv2.drawContours(mask,[npcount],0,255,-1)
- nimage = cv2.bitwise_and(image,image,mask=mask)
- config = ('-l eng --oem 1 --psm 3')
- text = pytesseract.image_to_string(nimage, config=config)
- raw_data = {'date':[time.asctime( time.localtime(time.time()))],'':[text]}
- df = pd.DataFrame(raw_data)
- df.to_csv('data.csv',mode='a')
- if text:
-    print("\n"+"Found licence plate Number: "+text+"\n")
- else:
-    print("\nSorry! I couldn't recognise a license plate in the provided image.\n")
-except cv2.error:
-    print("\nSorry! I couldn't recognise a license plate in the provided image.\n")
+        # Create mask
+        mask = np.zeros(gray.shape, np.uint8)
+        nimage = cv2.drawContours(mask, [npcount], 0, 255, -1)
+        nimage = cv2.bitwise_and(image, image, mask=mask)
+        
+        # Perform OCR
+        config = ('-l eng --oem 1 --psm 3')
+        text = pytesseract.image_to_string(nimage, config=config)
+        
+        # Print license plate number if found
+        if text:
+            print("\nFound license plate Number in", image_path, ":", text)
+        else:
+            #print("\nSorry! Couldn't recognize a license plate in", image_path)
+            pass
+    except cv2.error:
+        #print("\nSorry! Couldn't recognize a license plate in", image_path)
+        pass 
+
+# Directory containing images
+image_dir = 'images'
+
+# Create directory if not present
+if not os.path.exists(image_dir):
+    os.makedirs(image_dir)
+
+# Iterate over each image file in the directory
+for filename in os.listdir(image_dir):
+    if filename.endswith('.jpg') or filename.endswith('.png'):
+        image_path = os.path.join(image_dir, filename)
+        #print("\nProcessing", image_path)
+        process_image(image_path)
+         
