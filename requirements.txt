@@ -2,3 +2,4 @@ tesseract
 numpy
 pandas
 imutils
+opencv-python
