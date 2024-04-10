@@ -1,0 +1,4 @@
+tesseract
+numpy
+pandas
+imutils
